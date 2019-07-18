@@ -52,3 +52,57 @@ $user = \Drupal\user\Entity\User::create();
 //Save user
     $res = $user->save();
 ``` 
+
+## Get taxonomy terms of a vocabulary
+
+```
+$query = \Drupal::entityQuery('taxonomy_term');
+    $query->condition('vid', "tags");
+    $tids = $query->execute();
+    $terms = \Drupal\taxonomy\Entity\Term::loadMultiple($tids);
+    
+//Get Taxonomy name
+$name = $term->toLink()->getText();
+
+//Create link to the term
+$link = \Drupal::l($term->toLink()->getText(), $term->toUrl());    
+``` 
+
+## Domain Access get all domains
+
+```
+// Load all domains
+$storage = \Drupal::entityTypeManager()->getStorage('domain');
+$domains = $storage->loadMultiple();
+
+// Check active domain
+$optionSelect = $domain->isActive() ? 'active"' : 'no-active';
+
+// Domain HostName
+$hostname = $domain->getHostname();
+
+// Domain ID
+$hostname = $domain->getDomainId();
+
+// Domain name or path
+$name = $domain->get('name');
+$fullUrl = $domain->get('path');
+```
+
+## Get the current page URI
+
+```
+$current_path = \Drupal::service('path.current')->getPath(); 
+$current_uri = \Drupal::request()->getRequestUri(); 
+$fullUrl = \Drupal::request()->getSchemeAndHttpHost() . $current_uri;
+
+//Here an example to get the current page path programmatically in Drupal 8
+
+$current_url = Url::fromRoute('<current>');
+$path = $current_url->toString();
+
+// Exemples for the page /en/user/login:
+$current_url->toString(); // /en/user/login
+$current_url->getInternalPath(); // user/login
+$path = $current_url->getRouteName(); // <current>
+```
