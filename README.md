@@ -14,6 +14,21 @@ $language =  \Drupal::languageManager()->getCurrentLanguage()->getName();
 ## Add a message to Drupal 8 Log system (good bye watchdog :))
 
 ```
+// Redirect to the front page:
+return new \Symfony\Component\HttpFoundation\RedirectResponse(\Drupal::url('<front>'));
+
+// Redirect to a route path (user page)
+return new \Symfony\Component\HttpFoundation\RedirectResponse(\Drupal::url('user.page'));
+
+// To a internal path
+ return new \Symfony\Component\HttpFoundation\RedirectResponse('/node/17/edit');
+// OR
+   return new \Symfony\Component\HttpFoundation\RedirectResponse(\Drupal\Core\Url::fromUserInput('/node/17/edit')->toString());
+``` 
+
+## Page Redirection
+
+```
 \Drupal::logger("mymodule")->alert("Message");
 \Drupal::logger("mymodule")->critical("Message");
 \Drupal::logger("mymodule")->debug("Message");
@@ -24,6 +39,21 @@ $language =  \Drupal::languageManager()->getCurrentLanguage()->getName();
 \Drupal::logger("mymodule")->warning("Message");
 ``` 
 
+# FORM 
+
+## Get FORM
+
+```
+$form = \Drupal::formBuilder()->getForm('Drupal\user\Form\UserLoginForm');
+``` 
+
+## Form redirection on submit
+
+```
+public function submitForm(array &$form, FormStateInterface $form_state) {
+  $form_state->setRedirect('user.page');
+}
+``` 
 
 
 # NODE
@@ -286,6 +316,31 @@ $link = \Drupal\Core\Link::fromTextAndUrl($text, $url);
 $url = "https://site.com/filename.txt";
 $result = system_retrieve_file($url, $destination = NULL, $managed = FALSE, $replace = FILE_EXISTS_REPLACE);
 ```
+# FIELD
+
+## Preprocess a Field, Change Theming of a field
+
+```
+// How to Change the Title, Change the description
+/**
+ * implements hook_element_info_alter()
+ *
+ */
+function mymodule_alter_element_info_alter(&$type) {
+  if (isset($type['date_popup'])) {
+    $type['date_popup']['#process'][] = '_mymodule_date_popup_process_alter';
+  }
+}
+function _mymodule_date_popup_process_alter(&$element, &$form_state, $context) {
+  unset($element['date']['#description']);
+  if ($element['#name'] == 'node_changed') {
+    $element['date']['#title'] = "The Date is";
+  }
+  return $element;
+}
+```
+
+
 
 ## Create a custom permission
 
@@ -304,4 +359,30 @@ mymodule.home:
     _title: 'My test Home'
   requirements:
     _permission: 'mymodule test_permission'
+```
+
+## How to read data from a url (good bye drupal_http_request() )
+
+```
+use GuzzleHttp\Exception\RequestException;
+$url = "http://www.site.com";
+$client = \Drupal::httpClient();
+try {
+  $response = $client->get($url);
+  $data = $response->getBody();
+  $code = $response->getStatusCode();
+  $header = $response->getHeaders();
+}
+catch (RequestException $e) {
+   watchdog_exception('my_module', $e);
+}
+```
+
+## JSON Encode and Decode
+
+```
+use Drupal\Component\Serialization\Json;
+
+$json = Json::encode($data);
+$data = Json::decode($json);
 ```
