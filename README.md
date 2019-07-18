@@ -55,10 +55,20 @@ public function submitForm(array &$form, FormStateInterface $form_state) {
 }
 ``` 
 
+# Render a Render array to HTML code
+
+```
+$result =  array(
+  '#markup' => 'Hello. This is my First Page',
+);
+$renderer = \Drupal::service('renderer');
+$html = $renderer->render($result);
+```
+
 ----------------------------------------------------
 
 
-# NODE
+# NODE and ENTITY
 
 # Get field value of a Node / Entity
 
@@ -81,6 +91,11 @@ foreach ($node->get('field_images')->getValue() as $key => $image) {
 //Example Of $settings
 $settings = ['settings' => ['image_style' => 'thumbnail']];
 ```
+
+# Get Entity data and metadata
+
+$nodeEntity = \Drupal::entityTypeManager()->getDefinition('node');
+
 
 ## Create a node programmatically (Article)
 
@@ -242,6 +257,12 @@ $term = \Drupal\taxonomy\Entity\Term::create([
     $tids = $query->execute();
 ``` 
 
+# Show 1000 items on admin page
+
+```
+drush cset taxonomy.settings terms_per_page_admin 1000
+``` 
+
 ----------------------------------------------------
 
 
@@ -328,6 +349,37 @@ $url = "https://site.com/filename.txt";
 $result = system_retrieve_file($url, $destination = NULL, $managed = FALSE, $replace = FILE_EXISTS_REPLACE);
 ```
 
+## CHECK FRONT AND GET CURRENT URL
+
+```
+use Drupal\Core\Url;
+
+$output[]['#cache']['max-age'] = 0;
+    if (\Drupal::service('path.matcher')->isFrontPage()) {
+      $current_url = "";
+    }
+    else {
+      $url = Url::fromRoute('<current>');
+      $current_url = $url->toString();
+    }
+    $path = "http://" . \Drupal::request()->getHost() . $current_url;
+```
+
+
+## Get Path/Route from Url Object
+
+```
+use Drupal\Core\Url;
+
+$url = Url::fromRoute('entity.node.canonical', ['node' => 1], []);
+if ($url->isRouted()) {
+  $out = $url->toString(); // Get : /en/node/1
+  $out = $url->getInternalPath(); // Get : node/1
+  $out = $url->getRouteName(); // Get : entity.node.canonical
+  $out = $url->getRouteParameters(); // Get : Array ([node] => 1)
+  $out = $url->getOptions(); // Get : Array ()
+}
+```
 ----------------------------------------------------
 
 # FIELD
