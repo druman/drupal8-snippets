@@ -11,6 +11,13 @@ $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
 $language =  \Drupal::languageManager()->getCurrentLanguage()->getName();
 ``` 
 
+## Print block programmatically
+
+```
+$block = \Drupal\block_content\Entity\BlockContent::load('BLOCK_ID');
+$block_array = \Drupal::entityTypeManager()->getViewBuilder('block_content')->view($block);
+``` 
+
 ## Add a message to Drupal 8 Log system (good bye watchdog :))
 
 ```
@@ -312,6 +319,10 @@ $path = $current_url->toString();
 $current_url->toString(); // /en/user/login
 $current_url->getInternalPath(); // user/login
 $path = $current_url->getRouteName(); // <current>
+
+// Get current route name
+$route_name = \Drupal::routeMatch()->getRouteName();
+
 
 // CHECK FRONT PAGE
 $is_front_page = \Drupal::service('path.matcher')->isFrontPage();
