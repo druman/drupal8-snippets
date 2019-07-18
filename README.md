@@ -10,6 +10,29 @@ $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
 //To get the language name:
 $language =  \Drupal::languageManager()->getCurrentLanguage()->getName();
 ``` 
+# NODE
+
+# Get field value of a Node / Entity
+
+```
+$value = $node->get($field)->value;
+$target = $node->get($field)->target_id; // For entity ref (Term and etc)
+
+// Get / Render image (Show current user's picture)
+$userCurrent = \Drupal::currentUser();
+$user = \Drupal\user\Entity\User::load($userCurrent->id());
+$renderd_image = $user->get('user_picture')->first()->view();
+```
+
+# Get multiple values of a Node / Entity
+
+```
+foreach ($node->get('field_images')->getValue() as $key => $image) {
+    $image = $node->field_images[$key]->view($settings);
+}
+//Example Of $settings
+$settings = ['settings' => ['image_style' => 'thumbnail']];
+```
 
 ## Create a node programmatically (Article)
 
@@ -28,6 +51,17 @@ $node = \Drupal\node\Entity\Node::create(array(
 $node->save();
 ``` 
 
+## Get node and nid from url
+
+```
+$node = \Drupal::routeMatch()->getParameter('node');
+if ($node) {
+  $nid = $node->id();
+}
+``` 
+
+
+# USER
 
 ## Create a user account programmatically
 
@@ -51,7 +85,20 @@ $user = \Drupal\user\Entity\User::create();
 
 //Save user
     $res = $user->save();
-``` 
+```
+
+## Get the current user
+
+```
+use Drupal\user\Entity\User;
+
+$userCurrent = \Drupal::currentUser();
+$user = \Drupal\user\Entity\User::load($userCurrent->id());
+$name = $user->getUsername();
+```
+
+
+# TAXONOMY
 
 ## Get taxonomy terms of a vocabulary
 
@@ -68,6 +115,30 @@ $name = $term->toLink()->getText();
 $link = \Drupal::l($term->toLink()->getText(), $term->toUrl());    
 ``` 
 
+# Create taxonomy term programmatically
+
+```
+$term = \Drupal\taxonomy\Entity\Term::create([
+          'vid' => 'test_vocabulary',
+          'langcode' => 'en',
+          'name' => 'My tag',
+          'description' => [
+            'value' => '<p>My description.</p>',
+            'format' => 'full_html',
+          ],
+          'weight' => -1,
+          'parent' => array(0),
+    ]);
+ $term->save();
+ 
+ //Check Taxonomy name exist
+    $query = \Drupal::entityQuery('taxonomy_term');
+    $query->condition('vid', "test_vocabulary");
+    $query->condition('name', "My tag");
+    $tids = $query->execute();
+``` 
+
+# Domain Access
 ## Domain Access get all domains
 
 ```
@@ -87,9 +158,12 @@ $hostname = $domain->getDomainId();
 // Domain name or path
 $name = $domain->get('name');
 $fullUrl = $domain->get('path');
+
+// Get the user IP address
+$ip = \Drupal::request()->getClientIp();
 ```
 
-## Get the current page URI
+## Get the current page URI or FRONT
 
 ```
 $current_path = \Drupal::service('path.current')->getPath(); 
@@ -105,4 +179,24 @@ $path = $current_url->toString();
 $current_url->toString(); // /en/user/login
 $current_url->getInternalPath(); // user/login
 $path = $current_url->getRouteName(); // <current>
+
+// CHECK FRONT PAGE
+$is_front_page = \Drupal::service('path.matcher')->isFrontPage();
+```
+
+## Create a link
+
+```
+use \Drupal\Core\Link;
+$link = Link::fromTextAndUrl($text, $url);
+
+// OR
+$link = \Drupal\Core\Link::fromTextAndUrl($text, $url);
+```
+
+## Download a file from URL
+
+```
+$url = "https://site.com/filename.txt";
+$result = system_retrieve_file($url, $destination = NULL, $managed = FALSE, $replace = FILE_EXISTS_REPLACE);
 ```
