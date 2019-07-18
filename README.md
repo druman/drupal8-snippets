@@ -10,6 +10,22 @@ $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
 //To get the language name:
 $language =  \Drupal::languageManager()->getCurrentLanguage()->getName();
 ``` 
+
+## Add a message to Drupal 8 Log system (good bye watchdog :))
+
+```
+\Drupal::logger("mymodule")->alert("Message");
+\Drupal::logger("mymodule")->critical("Message");
+\Drupal::logger("mymodule")->debug("Message");
+\Drupal::logger("mymodule")->emergency("Message");
+\Drupal::logger("mymodule")->error("Message");
+\Drupal::logger("mymodule")->info("Message");
+\Drupal::logger("mymodule")->notice("Message");
+\Drupal::logger("mymodule")->warning("Message");
+``` 
+
+
+
 # NODE
 
 # Get field value of a Node / Entity
@@ -50,6 +66,41 @@ $node = \Drupal\node\Entity\Node::create(array(
     ));
 $node->save();
 ``` 
+
+## Update a node / Entity
+
+```
+// Update title
+$node = \Drupal\node\Entity\Node::load($nid);
+$node->setTitle('The new Title')
+$node->save();
+
+// Update a field ('body' and 'field_name')
+$node = \Drupal\node\Entity\Node::load($nid);
+$node->set("body", 'New body text');
+$node->set("field_name", 'New value');
+$node->save();
+
+// To make changes after click on save / edit button, you can use the hook_entity_presave.
+// hook_entity_presave(Drupal\Core\Entity\EntityInterface $entity);
+
+function CUSTOM_MODULE_node_presave(Drupal\node\NodeInterface $node) {
+  $node->setTitle('Edited Title');
+  $node->set('body', 'this is the bew body');
+  //CAUTION : Do not save here, because it's automatic.
+}
+
+// Using HOOK_entity_presave()
+
+function mymodule_entity_presave(Drupal\Core\Entity\EntityInterface $entity) {
+  if ($entity->getEntityType()->id() == 'node') {
+    $entity->setTitle('The new Title');
+    //CAUTION : Do not save here, because it's automatic.
+  }
+}
+``` 
+
+
 
 ## Get node and nid from url
 
@@ -96,6 +147,24 @@ $userCurrent = \Drupal::currentUser();
 $user = \Drupal\user\Entity\User::load($userCurrent->id());
 $name = $user->getUsername();
 ```
+
+## Get user's roles
+
+```
+// Get All roles:
+$roles = \Drupal\user\Entity\Role::loadMultiple();
+
+// Get a user's roles:
+$uid = 4; //The user ID
+$user = \Drupal\user\Entity\User::load($uid);
+$roles = $user->getRoles();
+
+// To get current user's roles :
+$userCurrent = \Drupal::currentUser();
+$user = Drupal\user\Entity\User::load($userCurrent->id());
+$roles = $user->getRoles();
+```
+
 
 
 # TAXONOMY
@@ -163,6 +232,8 @@ $fullUrl = $domain->get('path');
 $ip = \Drupal::request()->getClientIp();
 ```
 
+# URL
+
 ## Get the current page URI or FRONT
 
 ```
@@ -184,6 +255,21 @@ $path = $current_url->getRouteName(); // <current>
 $is_front_page = \Drupal::service('path.matcher')->isFrontPage();
 ```
 
+## Get args from URL
+```
+$request = \Drupal::request();
+$current_path = $request->getPathInfo();
+$path_args = explode('/', $current_path);
+$first_argument = $path_args[1];
+
+// Example 2:
+$current_url = Url::fromRoute('<current>');
+$path = $current_url->toString();
+//OR of you want to get the url without language prefix
+$path = $current_url->getInternalPath();
+$path_args = explode('/', $path);
+```
+
 ## Create a link
 
 ```
@@ -199,4 +285,23 @@ $link = \Drupal\Core\Link::fromTextAndUrl($text, $url);
 ```
 $url = "https://site.com/filename.txt";
 $result = system_retrieve_file($url, $destination = NULL, $managed = FALSE, $replace = FILE_EXISTS_REPLACE);
+```
+
+## Create a custom permission
+
+```
+// mymodule.permissions.yml
+mymodule test_permission:
+  title: 'My Test Permission'
+  description: 'The description'
+  restrict access: false
+  
+// mymodule.routing.yml
+mymodule.home:
+  path: 'test/home'
+  defaults:
+    _controller: '\Drupal\mymodule\Controller\Test::home'
+    _title: 'My test Home'
+  requirements:
+    _permission: 'mymodule test_permission'
 ```
