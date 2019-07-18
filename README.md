@@ -55,6 +55,8 @@ public function submitForm(array &$form, FormStateInterface $form_state) {
 }
 ``` 
 
+----------------------------------------------------
+
 
 # NODE
 
@@ -141,6 +143,8 @@ if ($node) {
 }
 ``` 
 
+----------------------------------------------------
+
 
 # USER
 
@@ -195,6 +199,7 @@ $user = Drupal\user\Entity\User::load($userCurrent->id());
 $roles = $user->getRoles();
 ```
 
+----------------------------------------------------
 
 
 # TAXONOMY
@@ -237,7 +242,11 @@ $term = \Drupal\taxonomy\Entity\Term::create([
     $tids = $query->execute();
 ``` 
 
+----------------------------------------------------
+
+
 # Domain Access
+
 ## Domain Access get all domains
 
 ```
@@ -261,6 +270,8 @@ $fullUrl = $domain->get('path');
 // Get the user IP address
 $ip = \Drupal::request()->getClientIp();
 ```
+
+----------------------------------------------------
 
 # URL
 
@@ -316,6 +327,9 @@ $link = \Drupal\Core\Link::fromTextAndUrl($text, $url);
 $url = "https://site.com/filename.txt";
 $result = system_retrieve_file($url, $destination = NULL, $managed = FALSE, $replace = FILE_EXISTS_REPLACE);
 ```
+
+----------------------------------------------------
+
 # FIELD
 
 ## Preprocess a Field, Change Theming of a field
@@ -340,7 +354,25 @@ function _mymodule_date_popup_process_alter(&$element, &$form_state, $context) {
 }
 ```
 
+----------------------------------------------------
 
+# VIEWS
+
+## Alter a view results
+
+```
+function MYMODULE_views_pre_render(&$view) {
+  if ($view->name == 'view_myviewname') {
+    $result = $view->result;
+    foreach ($result as $i => $row) {
+      $view->result[$i]->field_field_myfieldtext[0]['rendered']['#markup'] = "The new text";
+    }
+  }
+}
+
+```
+
+----------------------------------------------------
 
 ## Create a custom permission
 
@@ -385,4 +417,38 @@ use Drupal\Component\Serialization\Json;
 
 $json = Json::encode($data);
 $data = Json::decode($json);
+```
+
+## Create HTML Table
+
+```
+$header = ['#','Name', 'Mail'];
+$data = [
+  [1,'Name 1', 'Mail1@example.com'],
+  [2,'Name N°2', 'second@example.com'],
+];
+
+$output[] = array(
+  '#theme' => 'table',
+  //'#cache' => ['disabled' => TRUE],
+  '#caption' => 'The table caption / Title',
+  '#header' => $header,
+  '#rows' => $data,
+);
+
+// ADD CLASS
+
+$header = ['#', 'Name', 'Mail'];
+    $data = [
+      [['data' => 2, 'class' => 'green'], 'Name 1', 'Mail1@example.com'],
+      [['data' => 2, 'class' => 'red'], 'Name N°2', 'second@example.com'],
+    ];
+    
+// ADD LINK to a table field
+use Drupal\Component\Render\FormattableMarkup;
+
+$value = new FormattableMarkup('<a href=":link">More</a>', [':link' => $url->toString()]);
+
+// PREPROCESS
+template_preprocess_table(&$vars);
 ```
