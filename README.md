@@ -455,6 +455,7 @@ function MYMODULE_views_query_alter(ViewExecutable $view, QueryPluginBase $query
 
 ## Set views title programatically
 
+```
 function MYMODULE_views_pre_render(ViewExecutable $view) {
 
   if ($view->id() == 'catalog') {
@@ -465,7 +466,7 @@ function MYMODULE_views_pre_render(ViewExecutable $view) {
     $route->setDefault('_title', $title);
   }
 }
-
+```
 
 ----------------------------------------------------
 
