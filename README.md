@@ -435,6 +435,53 @@ function MYMODULE_views_pre_render(&$view) {
 
 ```
 
+## Adding a condition to views with hook_views_query_alter ()
+
+```
+use Drupal\views\ViewExecutable;
+use Drupal\views\Plugin\views\query\QueryPluginBase;
+
+function MYMODULE_views_query_alter(ViewExecutable $view, QueryPluginBase $query) {
+  if ($view->id() == 'loshad' && $view->getDisplay()->display['id'] == 'page_1') {
+    $args = [
+      ':now' => date('Y'),
+      ':ages' => 4,
+    ];
+    $query->addWhereExpression('', 'node__field_god_rozhdeniya.field_god_rozhdeniya_value + :ages <= :now', $args);
+  }
+}
+
+```
+
+## Set views title programatically
+
+function MYMODULE_views_pre_render(ViewExecutable $view) {
+
+  if ($view->id() == 'catalog') {
+    $city = 'Paris';
+    $title = $view->getTitle() . ' ' . $city;
+    $view->setTitle($title);
+    $route = \Drupal::routeMatch()->getCurrentRouteMatch()->getRouteObject();
+    $route->setDefault('_title', $title);
+  }
+}
+
+
+----------------------------------------------------
+
+# JS
+
+## jquery once
+
+```
+$(".my-selector").once("comment_info").each(function() {
+          alert(1);
+});
+
+$(".my-selector").once("test_fields").append("<div>hello world");
+
+```
+
 ----------------------------------------------------
 
 ## Create a custom permission
