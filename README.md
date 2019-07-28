@@ -46,6 +46,76 @@ return new \Symfony\Component\HttpFoundation\RedirectResponse(\Drupal::url('user
 \Drupal::logger("mymodule")->warning("Message");
 ``` 
 
+# GET VALUE
+
+## Get node type in template_preprocess_node
+
+```
+$node_type = $node->bundle();
+``` 
+
+## Get node type in template_preprocess_page
+
+```
+$node_type = $variables['node']->getType();
+``` 
+
+## Get webform submission !
+
+```
+$webform = \Drupal::entityTypeManager()->getStorage('webform')->load('my_form');
+$webform = $webform->getSubmissionForm();
+``` 
+
+## Check permission current user
+
+```
+$user = \Drupal::currentUser();
+$is_admin= $user->hasPermission('access administration pages');
+```
+
+## Get alias URL node
+
+```
+$alias = \Drupal::service('path.alias_manager')->getAliasByPath('/node/' . $nid);
+``` 
+
+## GET ENTITY VALUES
+
+```
+// List of fields that an entity has, the field definitions also have a lot of information like the type.
+array_keys($entity->getFieldDefinitions())
+
+// Use get() instead of the magic __get() on the entity level then you at least get some type hints.
+$entity->get('field_name').
+
+// Get the list of properties a certain field has, use array_keys() again for just the names, but the definitions also have the type and if it's computed or not.
+$entity->getFieldDefinition('field_name')->getFieldStorageDefinition()->getPropertyDefinitions()
+
+// Most field types have value property, but e.g. entity references have target_id and the computed entity. as you found. File and Image fields have additional properties like title/alt/description.
+$entity->get('field_name')->value
+$entity->get('field_name')->target_id
+$entity->get('field_name')->entity
+
+// Note that get('value') is not the same as ->value on the field item level, get() returns a typed data object, get('value')->getValue() is the same as ->value.
+
+// When not specified, the delta 0 is assumed (all fields are a list internally, even something like the node id), you can use array access or the delta to access another delta, make sure it exists.
+$entity->get('field_name')[1]->value
+$entity->get('field_name')->get(1)->value
+
+// When you have an entity reference, you can get the entity type and class like this:
+$entity->get('field_name')->entity->getEntityTypeId()
+$entity->get('field_name')->entity->getEntityType()->getClass()
+// or 
+get_class($entity->get('field_name')->entity)
+
+// From there you can look up the interface and type hint against that, to a) make sure you have a valid, loadable reference and get type hints in an IDE:
+$file = $entity->get('field_name')->entity;
+if ($file instanceof \Drupal\file\FileInterface) {
+  $file->getFileUri();
+}
+```
+
 # FORM 
 
 ## Get FORM
@@ -101,8 +171,9 @@ $settings = ['settings' => ['image_style' => 'thumbnail']];
 
 # Get Entity data and metadata
 
+```
 $nodeEntity = \Drupal::entityTypeManager()->getDefinition('node');
-
+```
 
 ## Create a node programmatically (Article)
 
@@ -468,6 +539,15 @@ function MYMODULE_views_pre_render(ViewExecutable $view) {
 }
 ```
 
+## Views template suggestion
+
+```
+[base template name]--[view machine name]--[view display id].html.twig
+[base template name]--[view machine name]--[view display type].html.twig
+[base template name]--[view display type].html.twig
+[base template name]--[view machine name].html.twig
+[base template name].html.twig
+```
 ----------------------------------------------------
 
 # JS
