@@ -488,6 +488,19 @@ function _mymodule_date_popup_process_alter(&$element, &$form_state, $context) {
 }
 ```
 
+## Add custom attributes to field
+
+```
+function netsoft_helpers_preprocess_field(&$variables) {
+  if ($variables['field_type'] == 'link') {
+  	if ($variables['field_name'] == 'field_website') {
+      $variables['items']['0']['content']['#attributes']['target'] = '_blank';
+      $variables['items']['0']['content']['#attributes']['rel'] = 'nofollow noopener';
+  	}
+  }
+}
+```
+
 ----------------------------------------------------
 
 # VIEWS
