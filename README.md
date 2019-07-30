@@ -1,4 +1,4 @@
-# drupal8-snippets
+# Drupal 8 Snippets
 Useful snippets
 
 ## How to get the current language
