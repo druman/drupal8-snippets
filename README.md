@@ -52,6 +52,57 @@ return new \Symfony\Component\HttpFoundation\RedirectResponse(\Drupal::url('user
 \Drupal::logger('some_channel_name')->warning('<pre><code>' . print_r($responseObj, TRUE) . '</code></pre>');
 ``` 
 
+## Redirect users to some page when submitting a form
+
+```
+// Redirect to an internal Drupal route.
+$form_state->setRedirect('mymodule.page');
+// Or
+$form_state->setRedirect(
+  'entity.node.canonical',
+  ['node' => $node->id()]
+);
+
+// Redirect to a URI, or other web address
+$url = Drupal\core\Url::fromUserInput('/some_page');
+$form_state->setRedirectUrl($url);
+
+// Redirect with params and options
+$route_name = 'view.membership.membership';
+$params = ['user' => $uid];
+$options = [];
+$form_state->setRedirect($route_name, $params, $options);
+
+```
+
+## EntityTypeManager (loadByProperties)
+
+```
+// return object
+ $coupon = \Drupal::entityTypeManager()->getStorage('commerce_promotion_coupon')->load(3);
+// ex: $coupon->usage_limit->value = 10; $coupon->save();
+ $node = \Drupal::entityManager()->getStorage('node')->load($nid);
+ 
+ // return array !!!
+ $coupon = \Drupal::entityTypeManager()->getStorage('commerce_promotion_coupon')-> loadByProperties(['id' => '3']);
+ // you need to pick from array
+ $coupon = reset(\Drupal::entityTypeManager()->getStorage('commerce_promotion_coupon')-> loadByProperties(['id' => '3']));
+``` 
+
+## Using try / catch
+
+```
+try {
+  // Some code here
+}
+catch (Exception $e) {
+  // Generic exception handling if something else gets thrown.
+  \Drupal::logger('widget')->error($e->getMessage());
+}
+``` 
+
+
+
 # GET VALUE
 
 ## Get node type in template_preprocess_node
