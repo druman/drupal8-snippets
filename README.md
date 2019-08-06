@@ -46,6 +46,12 @@ return new \Symfony\Component\HttpFoundation\RedirectResponse(\Drupal::url('user
 \Drupal::logger("mymodule")->warning("Message");
 ``` 
 
+## Debug with logger
+
+```
+\Drupal::logger('some_channel_name')->warning('<pre><code>' . print_r($responseObj, TRUE) . '</code></pre>');
+``` 
+
 # GET VALUE
 
 ## Get node type in template_preprocess_node
@@ -115,6 +121,20 @@ if ($file instanceof \Drupal\file\FileInterface) {
   $file->getFileUri();
 }
 ```
+
+## Get values from referenced entity
+
+```
+foreach ($node->get('field_event')->referencedEntities() as $enty){
+
+$entity = \Drupal::entityTypeManager()->getStorage("taxonomy_term")->load($enty->field_event_time->target_id);
+
+$name = $entity->getName();
+print_r($name);
+
+}
+``` 
+
 
 # FORM 
 
