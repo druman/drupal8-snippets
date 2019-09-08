@@ -11,6 +11,15 @@ $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
 $language =  \Drupal::languageManager()->getCurrentLanguage()->getName();
 ``` 
 
+## Load block
+```
+// Load block and render
+$socialNetworksBlock = \Drupal\block_content\Entity\BlockContent::load(7);
+$variables['social_networks'] = \Drupal::entityTypeManager()
+          ->getViewBuilder('block_content')
+          ->view($socialNetworksBlock);
+``` 
+
 ## Print block programmatically
 
 ```
@@ -186,6 +195,34 @@ print_r($name);
 }
 ``` 
 
+## Get Nodes, Many Ways (load, route, php, from db)
+
+```
+// Load a node
+$listing_page_node = \Drupal\node\Entity\Node::load($node_id);
+
+// Get current node from the route
+\Drupal::routeMatch()->getParameter('node')
+\Drupal::routeMatch()->getParameter('node')->getType()
+
+// Get node in PHP and get field
+if(\Drupal::routeMatch()->getParameters()->has('node')) {
+    $current_node = \Drupal::routeMatch()->getParameter('node');
+    if($current_node->getType() === 'campaign_page') {
+        $variables['show_limited_menu'] = $current_node->get('field_show_limited_menu')->value;
+    }
+}
+
+// Get nodes from database, sort, filter and prepare display mode render array
+$query = \Drupal::entityQuery('node')
+                ->condition('type', 'product_service_detail')
+                ->condition('status', 1)
+                ->sort('created', 'DESC')
+                ->range(0, 4);
+                $nids = $query->execute();
+                $nodes = entity_load_multiple('node', $nids);
+                $variables['featured_nodes'] = \Drupal::entityTypeManager()->getViewBuilder('node')->viewMultiple($nodes, 'card');
+``` 
 
 # FORM 
 
@@ -211,6 +248,19 @@ $result =  array(
 );
 $renderer = \Drupal::service('renderer');
 $html = $renderer->render($result);
+```
+
+# Pass arguments to buildForm()
+```
+// in preprocessing.php
+$variables['lead_form'] = \Drupal::formBuilder()->getForm('Drupal\my_form_module\Form\LeadForm', 'hero_video');
+
+//it passes that extra variable through getForm into an arguments array added on the end of buildForm
+    
+public function buildForm(array $form, FormStateInterface $form_state, string $gated_content_context = NULL) {
+    if($gated_content_context === 'hero_video') { ... }
+    ....
+}
 ```
 
 ----------------------------------------------------
@@ -465,6 +515,10 @@ $path = $current_url->getRouteName(); // <current>
 // Get current route name
 $route_name = \Drupal::routeMatch()->getRouteName();
 
+// Get path alias
+$current_path = \Drupal::service('path.current')->getPath();
+\Drupal::service('path.alias_manager')->getAliasByPath($current_path);
+
 
 // CHECK FRONT PAGE
 $is_front_page = \Drupal::service('path.matcher')->isFrontPage();
@@ -694,6 +748,48 @@ $json = Json::encode($data);
 $data = Json::decode($json);
 ```
 
+## Export JSON PHP
+```
+$query = \Drupal::entityQuery('node');
+
+$node_ids = $query
+    ->condition('status', 1)
+    ->exists('field_sidebar')
+    ->execute();
+
+$all_nodes_JSON = [];
+
+foreach($node_ids as $node_id) {  
+  $node = \Drupal\node\Entity\Node::load($node_id); 
+  $sidebar_paragraphs = $node->get('field_sidebar')->referencedEntities();
+  foreach($sidebar_paragraphs as $parag) {
+      if($parag->getParagraphType()->id == 'related_links') {          
+          $related_links = $parag->get('field_related_links')->referencedEntities();
+          $related_nids = [];
+          foreach($related_links as $linked_entity) {
+            $related_node_JSON = [ 
+              'id' =>  $linked_entity->id(),
+              'url' => 'https://www.mysite.com/node/'.$linked_entity->id()
+            ];
+            array_push($related_nids, $related_node_JSON);
+          }
+          $this_node_JSON = [
+            'nid' => $node_id,
+            'title' => $node->getTitle(),
+            'type' => $node->getType(),
+            'url' => 'https://www.mysite.com/node/'.$node_id,
+            'related_links' => $related_nids
+          ];
+          array_push($all_nodes_JSON, $this_node_JSON); 
+          break;
+      }
+  }
+}
+$final_JSON = json_encode($all_nodes_JSON);
+print_r($final_JSON);
+```
+
+
 ## Create HTML Table
 
 ```
@@ -726,4 +822,61 @@ $value = new FormattableMarkup('<a href=":link">More</a>', [':link' => $url->toS
 
 // PREPROCESS
 template_preprocess_table(&$vars);
+```
+
+# SUGGESTIONS
+
+## Template Suggestions
+
+```
+//PAGE Suggestions
+$suggestions[] = 'page__path_alias__' . formatPathAlias($path_alias);
+
+//NODE Suggestions
+$node = \Drupal::request()->attributes->get('node');
+if (!is_null($node)) {
+    $node_alias = \Drupal::service('path.alias_manager')->getAliasByPath('/node/'.$node->id());
+
+    $view_mode = strtr($variables['elements']['#view_mode'], '.', '_');
+    $suggestions[] = 'node__path_alias__' . formatPathAlias($path_alias) . '__' . $view_mode;
+}
+
+//BLOCK Suggestions
+function mytheme_theme_suggestions_block_alter(array &$suggestions, array $variables) {
+  // Block suggestions for custom block bundles.
+  if (isset($variables['elements']['content']['#block_content'])) {
+    array_splice($suggestions, 1, 0, 'block__bundle__' . $variables['elements']['content']['#block_content']->bundle());
+  }
+}
+
+
+//FORM Suggestions
+function mytheme_theme_suggestions_form_alter(&$suggestions, array $variables, $hook) {
+  $suggestions[] = $hook . '__' . $variables['element']['#form_id'];
+}
+
+//INPUT Suggestions
+$suggestions[] = $hook . '__' . $variables['element']['#form_id'] . '__' . $variables['element']['#type'];
+
+//CONTAINER Suggestions
+if (isset($variables['element']['#form_id'])) {
+    $suggestions[] = $hook . '__' . $variables['element']['#form_id'];
+}
+
+//FORM ELEMENT Suggestions
+if (isset($variables['element']['#name']) && isListingPageFacet($variables['element']['#name'])) {
+    $suggestions[] = $hook . '__' . $variables['element']['#type'] . '__listing_page';
+}
+
+$suggestions[] = $hook . '__' . $variables['element']['#type'];
+
+//FIELDSET Suggestions
+if (isset($variables['element']['#name']) && isListingPageFacet($variables['element']['#name'])) {
+    $suggestions[] = $hook . '__' . $variables['element']['#type'] . '__listing_page';
+}
+
+//Better Exposed Filters (BEF) Suggestions
+if (isset($variables['element']['#name']) && isListingPageFacet($variables['element']['#name'])) {
+    $suggestions[] = $hook . '__' . $variables['element']['#type'] . '__listing_page';
+}
 ```
