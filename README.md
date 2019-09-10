@@ -1,6 +1,30 @@
 # Drupal 8 Snippets
 Useful snippets
 
+## GET TERM OR NODE OBJECT CURRENT PAGE
+```
+// TERM:
+    $term = \Drupal::routeMatch()->getParameter('taxonomy_term');
+    if ($term instanceof TermInterface && $term->getVocabularyId() == 'catalog') {
+      if ($term->hasField('field_level')) {
+        if ($term->get('field_level')->value != 1) {
+          $level = TRUE;
+        }
+      }
+    }
+
+//NODE:
+  $node = \Drupal::routeMatch()->getParameter('node');
+  if ($node instanceof NodeInterface) {
+    if ($node->hasField('field_hero_image')) {
+      if (!$node->get('field_hero_image')->isEmpty()) {
+        $hero_image_exists = TRUE;
+      }
+    }
+  }
+```
+
+
 ## How to get the current language
 
 ```
